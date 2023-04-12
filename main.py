@@ -49,7 +49,7 @@ def to_cloud(frame_detections_dict, x=0, y=0):
 
 
 def main(args):
-    # print(args.input)
+    print(args.input)
     radius=args.radius
     detections_file = open(args.input, 'r')
     detections = json.load(detections_file)
@@ -57,7 +57,7 @@ def main(args):
     json_path, json_name = os.path.split(args.input)
     video_name, _ = os.path.splitext(json_name)
     tracker = Tracker(COLUMNS, video_name, args)
-    print(args.video_path)
+    # print(args.video_path)
     for i in range(len(detections)-1):
         if i==0:
             previous = detections[str(i)]
@@ -73,11 +73,13 @@ def main(args):
         previous_cloud = to_cloud(previous)
         icp = o3d.pipelines.registration.registration_icp(previous_cloud, current_cloud, radius)
         correspondence_set = np.asarray(icp.correspondence_set)
-        print(f'fitntess: {icp.fitness}; len prev: {previus_len};en curr {current_len}, matcheos: {len(correspondence_set)}')
+        # print(f'fitntess: {icp.fitness}; len prev: {previus_len};en curr {current_len}, matcheos: {len(correspondence_set)}')
         fitness = icp.fitness
-        if icp.fitness <= 0.85:
-            for px_shift in [20, 25, 30, 35, 40, 45]:
-                for x,y in [(px_shift, 0), (px_shift, px_shift), (0, px_shift), (-px_shift, 0), (-px_shift, -px_shift), (0, -px_shift)]:
+        if icp.fitness < 0.8:
+            if icp.fitness > 0.8: # este es por si ya enconté un buen fitness no seguir buscando
+                break
+            for px_shift in [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65]:
+                for x,y in [(px_shift, 0), (px_shift, px_shift), (0, px_shift), (-px_shift, 0), (-px_shift, -px_shift), (0, -px_shift), (px_shift, -px_shift),   (-px_shift, px_shift)]:
                     previous_copy = copy.deepcopy(previous)
                     previous_copy_cloud_aux = to_cloud(previous_copy, x, y)
                     icp2 = o3d.pipelines.registration.registration_icp(previous_copy_cloud_aux, current_cloud, radius)
@@ -85,12 +87,17 @@ def main(args):
                     if icp.fitness < icp2.fitness:
                         icp = icp2
                         previous_copy_cloud = copy.deepcopy(previous_copy_cloud_aux)
+                        if icp.fitness > 0.8:
+                            break
 
-            if icp.fitness == fitness:
-                previous_copy_cloud = previous_cloud
+
             correspondence_set = np.asarray(icp.correspondence_set)
-            print(f'  fitntess: {icp.fitness}; len prev: {previus_len};en curr {current_len}, matcheos: {len(correspondence_set)}')
+            if icp.fitness < 0.85:
+                print(args.input[50:-5], f' fitness: {icp.fitness} frame {tracker.frame}:')
 
+            # print(f'  fitntess: {icp.fitness}; len prev: {previus_len};en curr {current_len}, matcheos: {len(correspondence_set)}')
+            # if icp.fitness == fitness:
+            #     previous_copy_cloud = previous_cloud
             # previous_matched_idx = correspondence_set[:, 0]
             # current_matched_idx = correspondence_set[:, 1]
             # previous_copy_cloud.transform(icp.transformation)

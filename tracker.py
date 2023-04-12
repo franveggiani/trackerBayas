@@ -48,7 +48,7 @@ class Tracker:
             self.draw_circles(img)
 
     def update_ids(self, correspondence_set, current, previous):
-        print(f'Frame: {self.frame}')
+        # print(f'Frame: {self.frame}')
         self.current_ids_dict.clear()
         match_dict = { cv[0]:cv[1] for cv in correspondence_set}
         previous_matched = correspondence_set[:,0]
