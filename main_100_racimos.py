@@ -40,7 +40,7 @@ for directory in path_directory_list:
             args.output = output_root+directory+jsf[:-6]
             main.main(args)
             end = time.time()
-            print(f'time: {end-ini:2.2}')
+            print(f'time: {end-ini:2f}')
     else:
         for jsf, vf in zip(json_file, videos_file):
             ini = time.time()
@@ -50,4 +50,4 @@ for directory in path_directory_list:
             args.output = output_root+directory+jsf[:-6]
             main.main(args)
             end = time.time()
-            print(f'time: {end-ini:2.2}')
+            print(f'time: {end-ini:2f}')
