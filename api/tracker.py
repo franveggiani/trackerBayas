@@ -37,6 +37,8 @@ class Tracker:
             cv2.putText(rotated_frame, text, (round(x)-5, round(y)+5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (200, 0, 200), 2 )
             # (random.randint(0,255), random.randint(0,255), random.randint(0,255))                
         cv2.imwrite(f'{self.args.output}/{self.video_name}_{self.frame}_track.png', rotated_frame)
+        print(f"Frame {self.frame} procesado y guardado como {self.video_name}_{self.frame}_track.png")
+        
 
     def init_ids(self, vector):
         self.id_ctr = len(vector) - 1 #contador de id
@@ -45,12 +47,12 @@ class Tracker:
                                              # todas las detecciones anteriores tienen id
             self._add_to_bundle(v[0], v[1], v[2], i)
         if self.args.draw_tracking:
-            frame = self.vs.read()
-            flag, img = frame
+            flag, img = self.vs.read()
             if not flag:
-                raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), self.args.video_path)
-            # Rotar frames 90 grados
+                raise FileNotFoundError(f"Error: No se pudo leer el video {self.args.video_path}")
             self.draw_circles(img)
+            
+            
 
     def update_ids(self, correspondence_set, current, previous):
         # print(f'Frame: {self.frame}')

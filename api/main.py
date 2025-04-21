@@ -108,7 +108,7 @@ async def tracker(req: TrackerRequest):
         
     tracker.write_results(args.output)
     
-        
+    return {"message": "Tracker ejecutado correctamente", "output_path": args.output, "video_path": args.video_path}
             
             
     
