@@ -3,7 +3,7 @@ import json
 import os
 import numpy as np
 import open3d as o3d
-from tracker import Tracker
+from api.tracker import Tracker
 import pandas as pd
 import copy
 
@@ -54,9 +54,11 @@ def main(args):
     detections_file = open(args.input, 'r')
     detections = json.load(detections_file)
     detections_file.close()
+    
     json_path, json_name = os.path.split(args.input)
     video_name, _ = os.path.splitext(json_name)
     tracker = Tracker(COLUMNS, video_name, args)
+    
     # print(args.video_path)
     for i in range(len(detections)-1):
         if i==0:
@@ -76,8 +78,10 @@ def main(args):
         # print(f'fitntess: {icp.fitness}; len prev: {previus_len};en curr {current_len}, matcheos: {len(correspondence_set)}')
         fitness = icp.fitness
         if icp.fitness < 0.8:
+            
             if icp.fitness > 0.8: # este es por si ya enconté un buen fitness no seguir buscando
                 break
+            
             for px_shift in [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65]:
                 for x,y in [(px_shift, 0), (px_shift, px_shift), (0, px_shift), (-px_shift, 0), (-px_shift, -px_shift), (0, -px_shift), (px_shift, -px_shift),   (-px_shift, px_shift)]:
                     previous_copy = copy.deepcopy(previous)

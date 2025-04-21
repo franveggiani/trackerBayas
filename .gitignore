@@ -1,5 +1,7 @@
 example_data/*
 output/*
+input/*
+api/__pycache__/
 
 # Created by https://www.toptal.com/developers/gitignore/api/python,pycharm,windows,linux,opencv
 # Edit at https://www.toptal.com/developers/gitignore?templates=python,pycharm,windows,linux,opencv
