@@ -9,7 +9,6 @@ from .tracker import Tracker
 from .utils import to_cloud
 
 # RECORDAR: Agarrar el nombre cortando los caracteres que van después de .
-# HACER QUE CUANDO VIDEO_PATH SEA NONE, NO SE PERMITA PONER NI DRAW_TRACKING NI DRAW_CIRCLES
 
 COLUMNS = ['image_name','x','y','r','detection','track_id','label']
 
