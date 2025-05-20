@@ -1,7 +1,6 @@
 pandas
 numpy
-fastapi
-uvicorn[standard]
-pydantic
 opencv-python
 open3d
+celery
+redis

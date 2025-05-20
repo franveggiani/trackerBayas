@@ -3,7 +3,5 @@ services:
     image: tracker
     build: .
     container_name: tracker
-    ports:
-      - "8002:8000"
     volumes:
       - ./:/app

@@ -17,5 +17,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-EXPOSE 8003
-CMD ["uvicorn", "api.main:app", "--reload", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["celery", "-A", "tasks", "worker", "-Q", "tracker_queue", "--loglevel=info"]
