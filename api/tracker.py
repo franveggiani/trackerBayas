@@ -20,6 +20,11 @@ class Tracker:
         img = cv2.circle(img, center, radius, color, thickness)
 
     def draw_circles(self, img):
+        
+        # Creo la carpeta donde se guardan los frames
+        tracker_frames_folder = os.path.join(self.args.output, 'tracker_frames')
+        os.makedirs(tracker_frames_folder, exist_ok=True)
+        
         data = self.df
         labels = data[data['image_name']==self.video_name+f'_{self.frame}.png']
         # ['image_name', 'x', 'y', 'r', 'detection', 'track_id', 'label']
@@ -35,8 +40,9 @@ class Tracker:
                 self.draw_circle(rotated_frame, center, radius)
             text = f"{track_id}"
             cv2.putText(rotated_frame, text, (round(x)-5, round(y)+5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (200, 0, 200), 2 )
-            # (random.randint(0,255), random.randint(0,255), random.randint(0,255))                
-        cv2.imwrite(f'{self.args.output}/{self.video_name}_{self.frame}_track.png', rotated_frame)
+            # (random.randint(0,255), random.randint(0,255), random.randint(0,255))          
+                  
+        cv2.imwrite(f'{tracker_frames_folder}/{self.frame}_track.png', rotated_frame)
         print(f"Frame {self.frame} procesado y guardado como {self.video_name}_{self.frame}_track.png")
         
 

@@ -11,6 +11,10 @@ from .utils import to_cloud
 # RECORDAR: Agarrar el nombre cortando los caracteres que van después de .
 
 COLUMNS = ['image_name','x','y','r','detection','track_id','label']
+PX_SHIFT = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65]
+SHIFT_DIRECTIONS = [(x, y) for x, y in [
+    (1, 0), (1, 1), (0, 1), (-1, 0), (-1, -1), (0, -1), (1, -1), (-1, 1)
+]]
 
 class TrackerArgs:
     def __init__(self):
@@ -23,41 +27,34 @@ class TrackerArgs:
 
 app = FastAPI()
 
-@app.get("/")
-async def root():
-    return {"message": "Hola, ¿cómo estamos?"}
-
-@app.get("/tracker")
-async def tracker(req: TrackerRequest):
+@app.post("/tracker_task")
+async def tracker(request: TrackerRequest):
     
     # Request del endpoint
-    input_path = req.input_path                    # ORIGINALMENTE ES EL PATH DEL JSON
-    output_path = req.output_path
-    radius = req.radius
-    video_name = req.video_name                    
-    draw_circles = req.draw_circles
-    draw_tracking = req.draw_tracking
-    id_racimo = req.id_racimo
+    input_path = request.input_folder                # ORIGINALMENTE ES EL PATH DEL JSON
+    output_path = request.output_folder
+    radius = request.radius
+    video_name = request.video_name                    
+    draw_circles = request.draw_circles
+    draw_tracking = request.draw_tracking
+    
+    video_file = os.path.join(input_path, video_name)
+    json_file = os.path.join(input_path, str(video_name).replace('.mp4', '.json'))
 
-    if id_racimo is not None:
-        json_name = f"{id_racimo}_{video_name}.json"
-    else: 
-        json_name = f"{video_name}.json"
-        
-    json_path = os.path.join(input_path, json_name)
+    json_name = os.path.basename(json_file)
     
     # Convertimos la request del Endpoint a los args que requiere el tracker
     args = TrackerArgs()
-    args.input = json_path
+    args.input = json_file
     args.output = output_path
     args.radius = radius
     if video_name is not None:
-        args.video_path = os.path.join(input_path, video_name + '.mp4')
+        args.video_path = os.path.join(input_path, video_name)
         args.draw_tracking = draw_tracking
         args.draw_circles = draw_circles
 
     # Cargamos el JSON
-    detections_file = open(json_path, 'r')
+    detections_file = open(json_file, 'r')
     detections = json.load(detections_file)
     detections_file.close()
     
@@ -81,22 +78,27 @@ async def tracker(req: TrackerRequest):
         
         # Movimiento de frames para ajuste
         fitness = icp.fitness
-        if fitness < 0.8:
         
-            for px_shift in [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65]:    # Se prueban distintos niveles de shift               
-                for x,y in [(px_shift, 0), (px_shift, px_shift), (0, px_shift), (-px_shift, 0), (-px_shift, -px_shift), (0, -px_shift), (px_shift, -px_shift), (-px_shift, px_shift)]:
+        if fitness < 0.8:
+            for px_shift in PX_SHIFT:    # Se prueban distintos niveles de shift               
+                for x,y in SHIFT_DIRECTIONS:
+                    x_shift = px_shift * x
+                    y_shift = px_shift * y 
+                    
                     # Copia del frame original
                     previous_copy = copy.deepcopy(previous)
                     
                     # Mueve el frame
-                    previous_copy_cloud_aux = to_cloud(previous_copy, x, y)     
+                    shifted_cloud = to_cloud(previous_copy, x_shift, y_shift)     
                     
                     # Se evalua el nuevo frame respecto del original
-                    icp2 = o3d.pipelines.registration.registration_icp(previous_copy_cloud_aux, current_cloud, radius)
-                    new_fitness = icp2.fitness
-                    if fitness < new_fitness:
-                        fitness = new_fitness
-                        previous_copy_cloud = copy.deepcopy(previous_copy_cloud_aux)
+                    icp_shifted = o3d.pipelines.registration.registration_icp(shifted_cloud, current_cloud, radius)
+                    
+                    best_fitness = icp_shifted.fitness
+                    if fitness < best_fitness:
+                        fitness = best_fitness
+                        previous_copy_cloud = copy.deepcopy(shifted_cloud)
+                        
                         if fitness > 0.8:   # Si supera el umbral entonces se corta el loop
                             break
                         
